@@ -4,11 +4,11 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.mk.travel-hunter</groupId>
-	<artifactId>travel-hunter</artifactId>
+	<artifactId>travel-hunter-parent</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
-	<name>RecitalPlayer</name>
+	<name>travel-hunter-parent</name>
 	<description>Demo project for Spring Boot</description>
 
 	<parent>
