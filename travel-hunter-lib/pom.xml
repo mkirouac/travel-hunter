@@ -6,6 +6,8 @@
 		<artifactId>travel-hunter-parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
+	
+	<groupId>org.mk.travel-hunter</groupId>
 	<artifactId>travel-hunter-lib</artifactId>
-
+	<packaging>jar</packaging>
 </project>

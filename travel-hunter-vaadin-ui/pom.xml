@@ -6,7 +6,11 @@
 		<artifactId>travel-hunter-parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
+	
+	<groupId>org.mk.travel-hunter</groupId>
 	<artifactId>travel-hunter-vaadin-ui</artifactId>
+	<packaging>jar</packaging>
+	
 
 	<dependencies>
 		<dependency>
