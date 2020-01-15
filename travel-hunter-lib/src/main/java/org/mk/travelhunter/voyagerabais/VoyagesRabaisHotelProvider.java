@@ -1,5 +1,6 @@
 package org.mk.travelhunter.voyagerabais;
 
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -43,63 +44,37 @@ public class VoyagesRabaisHotelProvider implements HotelProvider {
 		return loadHotels();
 	}
 
-//	@Override
-//	public Collection<TravelDeal> searchDeals(TravelDealFilter filter) {
-//
-//		List<TravelDeal> allTravelDeals = new ArrayList<>();
-//
-//		Collection<VoyageRabaisRequest> requests = createRequests(filter);
-//
-//		for (VoyageRabaisRequest request : requests) {
-//			allTravelDeals.addAll(request.execute());
-//		}
-//
-//		return allTravelDeals;
-//
-//	}
-	
-//	String body = request.createBody();
-//
-//	Mono<String> employeeMono = client.post()
-//			.header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-//			.bodyValue(body)
-//			.retrieve()
-//			.bodyToMono(String.class);
-
-	
 	@Override
 	public Flux<TravelDeal> searchDeals(TravelDealFilter filter) {
-
 
 		Collection<VoyageRabaisRequest> requests = createRequests(filter);
 
 		WebClient client = WebClient.create(VoyageRabaisRequest.DEFAULT_URL);
-		
+
 		Flux<TravelDeal> travelDealFlux = Flux.empty();
-		
+
 		for (VoyageRabaisRequest request : requests) {
-			
+
 			String requestBody = request.createBody();
-			Flux<TravelDeal> responseBody  = client.post()
-					.header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-					.bodyValue(requestBody)
-					.retrieve()
-					.bodyToMono(String.class)
-					.flatMapMany(s -> {
+			Flux<TravelDeal> responseBody = client.post()
+					.header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8").bodyValue(requestBody)
+					.retrieve().bodyToMono(String.class).flatMapMany(s -> {
 						return Flux.fromIterable(parseResponse(s));
-						})
-					
-					//TODO Look into: 
-					//.mergeWith(travelDealFlux) //Would this keep updating the travelDealFlux initially created? 
-					;
-		
-			travelDealFlux = Flux.merge(travelDealFlux, responseBody);//TODO What would be the appropriate approach? Merging the flux each  time doesn't seem right. 
+					})
+
+			// TODO Look into:
+			// .mergeWith(travelDealFlux) //Would this keep updating the travelDealFlux
+			// initially created?
+			;
+
+			travelDealFlux = Flux.merge(travelDealFlux, responseBody);// TODO What would be the appropriate approach?
+																		// Merging the flux each time doesn't seem
+																		// right.
 		}
 
 		return travelDealFlux;
 
 	}
-	
 
 	private List<TravelDeal> parseResponse(String rawResponse) {
 
@@ -111,34 +86,37 @@ public class VoyagesRabaisHotelProvider implements HotelProvider {
 		try {
 			root = mapper.readTree(rawResponse);
 
-		JsonNode statusNode = root.path("status");
-		JsonNode gridNodes = root.path("grid");
+			JsonNode statusNode = root.path("status");
+			JsonNode gridNodes = root.path("grid");
 
-		Iterator<Entry<String, JsonNode>> gridIterator = gridNodes.fields();
+			Iterator<Entry<String, JsonNode>> gridIterator = gridNodes.fields();
 
-		while (gridIterator.hasNext()) {
-			Map.Entry<String, JsonNode> gridEntry = (Map.Entry<String, JsonNode>) gridIterator.next();
-			String date = gridEntry.getKey();
-			JsonNode starsNodes = gridEntry.getValue();
+			while (gridIterator.hasNext()) {
+				Map.Entry<String, JsonNode> gridEntry = (Map.Entry<String, JsonNode>) gridIterator.next();
+				String date = gridEntry.getKey();
+				JsonNode starsNodes = gridEntry.getValue();
 
-			Iterator<Entry<String, JsonNode>> starsIterator = (Iterator<Entry<String, JsonNode>>) starsNodes.fields();
-			while (starsIterator.hasNext()) {
-				Map.Entry<String, JsonNode> starEntry = (Map.Entry<String, JsonNode>) starsIterator.next();
-				JsonNode hotelNode = starEntry.getValue();
-				String hotelStars = starEntry.getKey();
-				String hotelName = hotelNode.get("hotel_name").asText();
-				String hotelCity = hotelNode.get("city").asText();
-				String hotelCountry = hotelNode.get("country").asText();
-				String hotelDuration = hotelNode.get("duration").asText();
-				DateTimeFormatter formatter = new DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("d MMM uuuu").toFormatter().withLocale(Locale.FRENCH);
-				LocalDate hotelDepartureDate = LocalDate.parse(replaceMonth(hotelNode.get("departure_date").asText()), formatter);
-				String hotelMinPrice = hotelNode.get("minprice").asText();
-				hotels.add(new TravelDeal(hotelName, hotelMinPrice, hotelDepartureDate, hotelCountry, hotelDuration,
-						hotelStars, hotelCity));
-				System.out.println();
+				Iterator<Entry<String, JsonNode>> starsIterator = (Iterator<Entry<String, JsonNode>>) starsNodes
+						.fields();
+				while (starsIterator.hasNext()) {
+					Map.Entry<String, JsonNode> starEntry = (Map.Entry<String, JsonNode>) starsIterator.next();
+					JsonNode hotelNode = starEntry.getValue();
+					String hotelStars = starEntry.getKey();
+					String hotelName = hotelNode.get("hotel_name").asText();
+					String hotelCity = hotelNode.get("city").asText();
+					String hotelCountry = hotelNode.get("country").asText();
+					String hotelDuration = hotelNode.get("duration").asText();
+					DateTimeFormatter formatter = new DateTimeFormatterBuilder().parseCaseInsensitive()
+							.appendPattern("d MMM uuuu").toFormatter().withLocale(Locale.FRENCH);
+					LocalDate hotelDepartureDate = LocalDate
+							.parse(replaceMonth(hotelNode.get("departure_date").asText()), formatter);
+					String hotelMinPrice = hotelNode.get("minprice").asText();
+					hotels.add(new TravelDeal(hotelName, hotelMinPrice, hotelDepartureDate, hotelCountry, hotelDuration,
+							hotelStars, hotelCity));
+					System.out.println();
+				}
+
 			}
-
-		}
 
 		} catch (JsonProcessingException e) {
 			// FIXME
@@ -148,27 +126,34 @@ public class VoyagesRabaisHotelProvider implements HotelProvider {
 		return hotels;
 	}
 
-	//TODO Document + externalize + junit (this method is duplicated in VoyageRabaisHotelProviderTest
+	// TODO Document + externalize + junit (this method is duplicated in
+	// VoyageRabaisHotelProviderTest
 	private String replaceMonth(String dateText) {
-		//Thanks to StackOverflow for this workaround. Ugly but works.
-		String[] givenMonths = { "jan", "fév", "mar", "avr", "mai", "juin", "juil", "août", "sept", "oct", "nov", "déc" };
-        String[] realMonths = { "janv.", "févr.", "mar.", "avr.", "mai.", "juin.", "juil.", "août.", "sept.", "oct.", "nov.", "déc." };
-        String original = dateText;
-        for (int i = 0; i < givenMonths.length; i++) {
-            original = original.replaceAll(givenMonths[i], realMonths[i]);
-        }
-        return original;
+		// Thanks to StackOverflow for this workaround. Ugly but works.
+		String[] givenMonths = { "jan", "fév", "mar", "avr", "mai", "juin", "juil", "août", "sept", "oct", "nov",
+				"déc" };
+		String[] realMonths = { "janv.", "févr.", "mar.", "avr.", "mai.", "juin.", "juil.", "août.", "sept.", "oct.",
+				"nov.", "déc." };
+		String original = dateText;
+		for (int i = 0; i < givenMonths.length; i++) {
+			original = original.replaceAll(givenMonths[i], realMonths[i]);
+		}
+		return original;
 	}
-	
+
 	private List<HotelIdentifier> loadHotels() {
 
 		try {
 			List<HotelIdentifier> hotelIdentifiers = new ArrayList<>();
 
-			Resource resource = new ClassPathResource("PuntaCanaHotels.xml");//TODO
+			Resource resource = new ClassPathResource("PuntaCanaHotels.xml");// TODO
 
-			Document document = Jsoup.parse(resource.getFile(), "UTF-8");////TODO
-
+			Document document = null;
+			try (InputStream is = resource.getInputStream()) {
+				document = Jsoup.parse(is, "UTF-8", "http://google.com");//// TODO
+			}
+			
+			
 			Elements elements = document.select("option");
 
 			for (Element element : elements) {

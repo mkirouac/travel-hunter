@@ -26,6 +26,13 @@
 		<commons-collection4.version>4.4</commons-collection4.version>
 	</properties>
 
+
+
+	<modules>
+		<module>travel-hunter-lib</module>
+		<module>travel-hunter-vaadin-ui</module>
+	</modules>
+	
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -151,11 +158,4 @@
 
 	</dependencies>
 
-
-
-
-	<modules>
-		<module>travel-hunter-lib</module>
-		<module>travel-hunter-vaadin-ui</module>
-	</modules>
 </project>
