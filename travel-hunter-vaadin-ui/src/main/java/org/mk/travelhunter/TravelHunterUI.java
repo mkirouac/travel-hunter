@@ -26,6 +26,9 @@ import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.themes.ValoTheme;
+
+import lombok.extern.slf4j.Slf4j;
+
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.GridLayout;
@@ -39,6 +42,7 @@ import reactor.core.publisher.Flux;
 
 @SpringUI
 @Push
+@Slf4j
 public class TravelHunterUI extends UI {
 
 	//Test code..
@@ -61,6 +65,10 @@ public class TravelHunterUI extends UI {
 
 	@Override
 	protected void init(VaadinRequest request) {
+		
+		log.debug("Initiating TravelHunerUI");
+		
+		
 		startDateTextField = new TextField("Start Date");
 		startDateTextField.setValue("2020-01-01");
 		endDateTextField = new TextField("End Date");
@@ -73,14 +81,14 @@ public class TravelHunterUI extends UI {
 		travelDealGrid.setSizeFull();
 
 		testButton = new Button("Test");
+		testButton.setDisableOnClick(true);
 		testButton.addClickListener((event) -> {
 			// TODO Sync
-			travelDeals.clear();
-			travelDealGrid.getDataProvider().refreshAll();
+			log.debug("testButton click listener start");
 
 			searchButtonClickedReactive(event);
-
-			testButton.setEnabled(false);
+			
+			log.debug("testButton click listener end");
 		});
 
 		saveButton = new Button("Save");
@@ -132,21 +140,44 @@ public class TravelHunterUI extends UI {
 	private void search(HotelIdentifier hotel, LocalDate startDate, LocalDate endDate) {
 		TravelDealFilter filter = TravelDealFilter.builder().hotel(hotel).startDate(startDate).endDate(endDate).build();
 
+		log.debug("Searching with filter: " + filter);
+		
 		// TODO Move to controller
 		Flux<TravelDeal> dealFlux = hotels.searchDeals(filter);
 
-		dealFlux.doOnComplete(() -> {
+		//TODO Maybe we need a single flux and cancel all items should a new request arrive?
+		dealFlux
+		.doFirst(() -> {
 			threadSafeUpdateUI((ui) -> {
+				log.debug("dealFlux.doOnFirst::start");
+				travelDeals.clear();
+				travelDealGrid.getDataProvider().refreshAll();
+				log.debug("dealFlux.doOnFirst::end");
+			});})
+		.doOnComplete(() -> {
+			threadSafeUpdateUI((ui) -> {
+				log.debug("dealFlux.doOnComplete::start");
 				testButton.setEnabled(true);
 				statusLabel.setValue("Search Completed. Results: " + travelDeals.size());
-			});
-		}).subscribe(deal -> {
+				log.debug("dealFlux.doOnComplete::end");
+			});})
+		.doOnError((ex) -> {
 			threadSafeUpdateUI((ui) -> {
+				testButton.setEnabled(true);
+				travelDeals.clear();
+				travelDealGrid.getDataProvider().refreshAll();
+				statusLabel.setValue("An error occured, please try again");
+				log.error("Flux failed", ex);
+			});})
+		.subscribe(deal -> {
+			threadSafeUpdateUI((ui) -> {
+				log.debug("dealFlux.subscribe::start");
+				log.debug("Received a TravelDeal from Flux: " + deal);
 				travelDeals.add(deal);
 				travelDealGrid.getDataProvider().refreshAll();
 				statusLabel.setValue("Searching... Results: " + travelDeals.size());
-			});
-		});
+				log.debug("dealFlux.subscribe::start");
+			});});
 	}
 
 	private void threadSafeUpdateUI(Consumer<UI> uiUpdater) {
