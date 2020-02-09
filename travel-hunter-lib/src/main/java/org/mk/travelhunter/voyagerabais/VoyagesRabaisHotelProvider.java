@@ -35,7 +35,10 @@ import reactor.core.publisher.Flux;
 @Component
 public class VoyagesRabaisHotelProvider implements HotelProvider {
 
-	public VoyagesRabaisHotelProvider() {
+	private final VoyageRabaisDateParser dateParser;
+	
+	public VoyagesRabaisHotelProvider(VoyageRabaisDateParser dateParser) {
+		this.dateParser = dateParser;
 		loadHotels();
 	}
 
@@ -106,10 +109,10 @@ public class VoyagesRabaisHotelProvider implements HotelProvider {
 					String hotelCity = hotelNode.get("city").asText();
 					String hotelCountry = hotelNode.get("country").asText();
 					String hotelDuration = hotelNode.get("duration").asText();
-					DateTimeFormatter formatter = new DateTimeFormatterBuilder().parseCaseInsensitive()
-							.appendPattern("d MMM uuuu").toFormatter().withLocale(Locale.FRENCH);
-					LocalDate hotelDepartureDate = LocalDate
-							.parse(replaceMonth(hotelNode.get("departure_date").asText()), formatter);
+					
+
+					LocalDate hotelDepartureDate = dateParser.parseDate(hotelNode.get("departure_date").asText());
+					
 					String hotelMinPrice = hotelNode.get("minprice").asText();
 					hotels.add(new TravelDeal(hotelName, hotelMinPrice, hotelDepartureDate, hotelCountry, hotelDuration,
 							hotelStars, hotelCity));
@@ -125,22 +128,7 @@ public class VoyagesRabaisHotelProvider implements HotelProvider {
 
 		return hotels;
 	}
-
-	// TODO Document + externalize + junit (this method is duplicated in
-	// VoyageRabaisHotelProviderTest
-	private String replaceMonth(String dateText) {
-		// Thanks to StackOverflow for this workaround. Ugly but works.
-		String[] givenMonths = { "jan", "fév", "mar", "avr", "mai", "juin", "juil", "août", "sept", "oct", "nov",
-				"déc" };
-		String[] realMonths = { "janv.", "févr.", "mar.", "avr.", "mai.", "juin.", "juil.", "août.", "sept.", "oct.",
-				"nov.", "déc." };
-		String original = dateText;
-		for (int i = 0; i < givenMonths.length; i++) {
-			original = original.replaceAll(givenMonths[i], realMonths[i]);
-		}
-		return original;
-	}
-
+	
 	private List<HotelIdentifier> loadHotels() {
 
 		try {

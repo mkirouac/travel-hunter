@@ -2,7 +2,6 @@ package org.mk.travelhunter.voyagerabais;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.text.DateFormatSymbols;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -22,7 +21,7 @@ public class VoyageRabaisHotelProviderTest {
 		LocalDate startDate = date("2020-01-01");
 		LocalDate endDate = date("2020-01-01");
 
-		VoyagesRabaisHotelProvider provider = new VoyagesRabaisHotelProvider();
+		VoyagesRabaisHotelProvider provider = new VoyagesRabaisHotelProvider(new VoyageRabaisDateParser());
 
 		TravelDealFilter filter = TravelDealFilter.builder()
 				.hotel(new HotelIdentifier("test-hotel", "this is a test hotel")).startDate(startDate).endDate(endDate)
@@ -40,7 +39,7 @@ public class VoyageRabaisHotelProviderTest {
 		LocalDate startDate = date("2020-01-01");
 		LocalDate endDate = date("2020-01-05");
 
-		VoyagesRabaisHotelProvider provider = new VoyagesRabaisHotelProvider();
+		VoyagesRabaisHotelProvider provider = new VoyagesRabaisHotelProvider(new VoyageRabaisDateParser());
 
 		TravelDealFilter filter = TravelDealFilter.builder()
 				.hotel(new HotelIdentifier("test-hotel", "this is a test hotel")).startDate(startDate).endDate(endDate)
@@ -59,7 +58,7 @@ public class VoyageRabaisHotelProviderTest {
 		LocalDate startDate = date("2020-01-01");
 		LocalDate endDate = date("2020-01-07");
 
-		VoyagesRabaisHotelProvider provider = new VoyagesRabaisHotelProvider();
+		VoyagesRabaisHotelProvider provider = new VoyagesRabaisHotelProvider(new VoyageRabaisDateParser());
 
 		TravelDealFilter filter = TravelDealFilter.builder()
 				.hotel(new HotelIdentifier("test-hotel", "this is a test hotel")).startDate(startDate).endDate(endDate)
@@ -79,7 +78,7 @@ public class VoyageRabaisHotelProviderTest {
 		LocalDate startDate = date("2020-01-01");
 		LocalDate endDate = date("2020-01-10");
 
-		VoyagesRabaisHotelProvider provider = new VoyagesRabaisHotelProvider();
+		VoyagesRabaisHotelProvider provider = new VoyagesRabaisHotelProvider(new VoyageRabaisDateParser());
 
 		TravelDealFilter filter = TravelDealFilter.builder()
 				.hotel(new HotelIdentifier("test-hotel", "this is a test hotel")).startDate(startDate).endDate(endDate)
@@ -102,7 +101,7 @@ public class VoyageRabaisHotelProviderTest {
 		LocalDate startDate = date("2020-01-01");
 		LocalDate endDate = date("2020-01-20");
 
-		VoyagesRabaisHotelProvider provider = new VoyagesRabaisHotelProvider();
+		VoyagesRabaisHotelProvider provider = new VoyagesRabaisHotelProvider(new VoyageRabaisDateParser());
 
 		TravelDealFilter filter = TravelDealFilter.builder()
 				.hotel(new HotelIdentifier("test-hotel", "this is a test hotel")).startDate(startDate).endDate(endDate)

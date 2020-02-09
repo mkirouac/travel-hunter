@@ -23,7 +23,7 @@ public class WebFluxTest {
 		LocalDate startDate = date("2020-01-05");
 		LocalDate endDate = date("2020-01-20");
 
-		VoyagesRabaisHotelProvider provider = new VoyagesRabaisHotelProvider();
+		VoyagesRabaisHotelProvider provider = new VoyagesRabaisHotelProvider(new VoyageRabaisDateParser());
 
 		// All grand bahia
 		// BW_2xQ_c7_fk_2je_l7_53_2xP_bd_rY_Ox_2C-_2IE_2It_2gL_2IB_xG_4y_Lx_4z_Dg

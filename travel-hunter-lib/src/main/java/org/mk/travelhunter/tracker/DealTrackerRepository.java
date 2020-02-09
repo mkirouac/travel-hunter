@@ -1,13 +1,14 @@
 package org.mk.travelhunter.tracker;
 
-import java.util.List;
 import java.util.UUID;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 
-public interface DealTrackerRepository extends MongoRepository<DealTracker, UUID> {
+import reactor.core.publisher.Flux;
+
+public interface DealTrackerRepository extends ReactiveMongoRepository<DealTracker, UUID> {
 
 	
-	public List<DealTracker> findAllByUserId(String userId);
+	public Flux<DealTracker> findAllByUserId(String userId);
 	
 }

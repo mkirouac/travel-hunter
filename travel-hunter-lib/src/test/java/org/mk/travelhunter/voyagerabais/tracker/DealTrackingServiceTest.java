@@ -13,29 +13,32 @@ import org.mk.travelhunter.HotelIdentifier;
 import org.mk.travelhunter.TravelDealFilter;
 import org.mk.travelhunter.tracker.DealTracker;
 import org.mk.travelhunter.tracker.DealTrackerRepository;
-import org.mk.travelhunter.tracker.DealTrackingService;
-import org.mk.travelhunter.tracker.DealTrackingServiceImpl;
+import org.mk.travelhunter.tracker.DealTrackingReactiveService;
+import org.mk.travelhunter.tracker.DealTrackingReactiveServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
-import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
-@EnableMongoRepositories("org.mk.travelhunter.tracker")
+//@EnableMongoRepositories("org.mk.travelhunter.tracker")
+@EnableReactiveMongoRepositories("org.mk.travelhunter.tracker")
 @DataMongoTest
 @ContextConfiguration(classes = { DealTrackingServiceTest.class } )
 public class DealTrackingServiceTest {
 
-	private DealTrackingService dealTrackingService;
+	//TODO These tests were written before the repository was reactive. 
+	
+	private DealTrackingReactiveService dealTrackingService;
 	
 	@Autowired
 	private DealTrackerRepository dealTrackerRepository;
 
 	@Before
 	public void setUp() {
-		dealTrackingService = new DealTrackingServiceImpl(dealTrackerRepository);
-		dealTrackerRepository.deleteAll();
+		dealTrackingService = new DealTrackingReactiveServiceImpl(dealTrackerRepository);
+		dealTrackerRepository.deleteAll().block();
 	}
 	
 	@Test 
@@ -43,10 +46,10 @@ public class DealTrackingServiceTest {
 		
 		//prepare
 		DealTracker tracker = dealTracker("test-user-id", "my-test-tracker");
-		dealTrackingService.addDealTracker(tracker);
+		dealTrackingService.saveDealTracker(tracker).block();
 			
 		//execute
-		List<DealTracker> trackers = dealTrackingService.getDealTrackers("test-user-id");
+		List<DealTracker> trackers = dealTrackingService.getDealTrackers("test-user-id").collectList().block();
 		
 		//assert
 		assertThat(trackers).isNotNull();
@@ -61,11 +64,11 @@ public class DealTrackingServiceTest {
 		//prepare
 		DealTracker tracker1 = dealTracker("test-user-id", "my-test-tracker-1");
 		DealTracker tracker2 = dealTracker("test-user-id", "my-test-tracker-2");
-		dealTrackingService.addDealTracker(tracker1);
-		dealTrackingService.addDealTracker(tracker2);
+		dealTrackingService.saveDealTracker(tracker1).block();
+		dealTrackingService.saveDealTracker(tracker2).block();
 			
 		//execute
-		List<DealTracker> trackers = dealTrackingService.getDealTrackers("test-user-id");
+		List<DealTracker> trackers = dealTrackingService.getDealTrackers("test-user-id").collectList().block();
 		
 		//assert
 		assertThat(trackers).isNotNull();
@@ -80,13 +83,13 @@ public class DealTrackingServiceTest {
 		DealTracker tracker1 = dealTracker("test-user-id-1", "my-test-tracker-1");
 		DealTracker tracker2 = dealTracker("test-user-id-1", "my-test-tracker-2");
 		DealTracker tracker3 = dealTracker("test-user-id-2", "my-test-tracker-3");
-		dealTrackingService.addDealTracker(tracker1);
-		dealTrackingService.addDealTracker(tracker2);
-		dealTrackingService.addDealTracker(tracker3);
+		dealTrackingService.saveDealTracker(tracker1).block();
+		dealTrackingService.saveDealTracker(tracker2).block();
+		dealTrackingService.saveDealTracker(tracker3).block();
 			
 		//execute
-		List<DealTracker> trackersForUser1 = dealTrackingService.getDealTrackers("test-user-id-1");
-		List<DealTracker> trackersForUser2 = dealTrackingService.getDealTrackers("test-user-id-2");
+		List<DealTracker> trackersForUser1 = dealTrackingService.getDealTrackers("test-user-id-1").collectList().block();
+		List<DealTracker> trackersForUser2 = dealTrackingService.getDealTrackers("test-user-id-2").collectList().block();
 		
 		//assert user 1
 		assertThat(trackersForUser1).isNotNull();
@@ -103,7 +106,7 @@ public class DealTrackingServiceTest {
 	public void noTrackersShouldReturnEmptyList() {
 		
 		//execute
-		List<DealTracker> trackers = dealTrackingService.getDealTrackers("test-user-id-1");
+		List<DealTracker> trackers = dealTrackingService.getDealTrackers("test-user-id-1").collectList().block();
 		
 		//assert
 		assertThat(trackers).isNotNull();
@@ -113,7 +116,7 @@ public class DealTrackingServiceTest {
 	@Test(expected = NullPointerException.class)
 	public void addingDealTrackersWithNullUserIdShouldThrowNullPointerException() {
 		
-		dealTrackingService.addDealTracker(null);
+		dealTrackingService.saveDealTracker(null);
 		
 	}
 	

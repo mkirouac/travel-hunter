@@ -1,33 +1,34 @@
 package org.mk.travelhunter.tracker;
 
-import java.util.List;
-
 import org.apache.commons.lang3.Validate;
 import org.springframework.stereotype.Service;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 @Service
-public class DealTrackingServiceImpl implements DealTrackingService {
+public class DealTrackingReactiveServiceImpl implements DealTrackingReactiveService {
 
 	private final DealTrackerRepository dealTrackerRepository;
 	
-	public DealTrackingServiceImpl(DealTrackerRepository dealTrackerRepository) {
+	public DealTrackingReactiveServiceImpl(DealTrackerRepository dealTrackerRepository) {
 		this.dealTrackerRepository = dealTrackerRepository;
 	}
 
 	@Override
-	public void addDealTracker(DealTracker dealTracker) {
+	public Mono<DealTracker> saveDealTracker(DealTracker dealTracker) {
 		
 		Validate.notNull(dealTracker, "addDealTracker(dealTracker) is expecting a non-null dealTracker");
 		
-		dealTrackerRepository.save(dealTracker);
+		return dealTrackerRepository.save(dealTracker);
 	}
 
 	@Override
-	public List<DealTracker> getDealTrackers(String userId) {
+	public Flux<DealTracker> getDealTrackers(String userId) {
 		
 		Validate.notNull(userId, "getDealTracker(userId) is expecting a non-null userId");
 		
-		List<DealTracker> trackers = dealTrackerRepository.findAllByUserId(userId);
+		Flux<DealTracker> trackers = dealTrackerRepository.findAllByUserId(userId);
 		
 		return trackers;
 				
