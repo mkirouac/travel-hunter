@@ -11,4 +11,5 @@ public interface TravelHunterController {
 	void requestHotelIdentifiers(TravelHunterView source);
 	void beginSavingDealTracker(TravelHunterView source, DealTracker dealTracker);
 	void beginSearchingForDeals(TravelHunterView source, TravelDealFilter filter);
+	void beginDeleteDealTracker(TravelHunterView source, DealTracker item);
 }

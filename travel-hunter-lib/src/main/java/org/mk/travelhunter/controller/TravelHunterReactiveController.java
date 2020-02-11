@@ -69,6 +69,26 @@ public class TravelHunterReactiveController implements TravelHunterController {
 				source.addSearchResult(deal);
 			});
 	}
+
+
+	@Override
+	public void beginDeleteDealTracker(TravelHunterView source, DealTracker dealTracker) {
+		dealTrackingService.deleteDealTracker(dealTracker)
+
+			.doOnSuccess(s -> {
+				// TODO subscribe consumer doesn't get called - need to find why. Workaround
+				// here is just to delete this from the finally (which do get called)
+				// TODO That would also be called on failure
+				source.deleteDealTracker(dealTracker);
+			})
+
+			.subscribe(v -> {
+				source.deleteDealTracker(dealTracker);
+			})
+
+		;
+		
+	}
 	
 	
 }

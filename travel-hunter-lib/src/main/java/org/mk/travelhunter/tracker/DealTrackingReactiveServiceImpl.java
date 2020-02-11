@@ -33,6 +33,11 @@ public class DealTrackingReactiveServiceImpl implements DealTrackingReactiveServ
 		return trackers;
 				
 	}
+
+	@Override
+	public Mono<Void> deleteDealTracker(DealTracker dealTracker) {
+		return dealTrackerRepository.delete(dealTracker);
+	}
 	
 	
 	

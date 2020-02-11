@@ -1,10 +1,8 @@
 package org.mk.travelhunter;
 
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 import org.mk.travelhunter.controller.TravelHunterController;
@@ -15,18 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.vaadin.annotations.Push;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.spring.annotation.SpringUI;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.DateField;
 import com.vaadin.ui.Grid;
-import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window;
-import com.vaadin.ui.themes.ValoTheme;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,8 +33,9 @@ public class TravelHunterUI extends UI implements TravelHunterView{
 	private SearchDealView  searchDealView;
 	private Grid<TravelDeal> travelDealGrid;
 	private Set<TravelDeal> travelDeals = new TreeSet<>();// TODO Concurrency, does not belong here, etc..
+	private SavedDealTrackersView savedDealTrackersView;
 	private Label statusLabel = new Label("ready");
-	private VerticalLayout savedDealsLayout;
+	
 
 	@Autowired
 	public TravelHunterUI(TravelHunterController controller) {
@@ -62,13 +53,13 @@ public class TravelHunterUI extends UI implements TravelHunterView{
 		travelDealGrid.setItems(travelDeals);
 		travelDealGrid.setSizeFull();
 
-		savedDealsLayout = new VerticalLayout();
+		savedDealTrackersView = new SavedDealTrackersView(controller, this);
+		savedDealTrackersView.addDealTrackerSelectedListener(dealTracker -> loadDealTracker(dealTracker));
 
 		VerticalLayout layout = new VerticalLayout();
 		
-		layout.addComponent(searchDealView);
+		layout.addComponent(VaadinUtils.wrapInHorizontalLayout(searchDealView, savedDealTrackersView));
 		
-		layout.addComponent(savedDealsLayout);
 		layout.addComponent(statusLabel);
 		layout.addComponent(travelDealGrid);
 		layout.setExpandRatio(travelDealGrid, 1);
@@ -88,13 +79,9 @@ public class TravelHunterUI extends UI implements TravelHunterView{
 	public void displayDealTracker(DealTracker dealTracker) {
 		
 		threadSafeUpdateUI(ui -> {
-			Button loadDealTrackerButton = new Button(dealTracker.getName());
-			loadDealTrackerButton.addStyleName(ValoTheme.BUTTON_LINK);
-			savedDealsLayout.addComponent(loadDealTrackerButton);
-			loadDealTrackerButton.addClickListener((event) -> {
-				loadDealTracker(dealTracker);
-			});
+			savedDealTrackersView.displayDealTracker(dealTracker);
 		});
+		
 	}
 	
 	
@@ -155,6 +142,11 @@ public class TravelHunterUI extends UI implements TravelHunterView{
 				uiUpdater.accept(ui);
 			});
 		}
+	}
+
+	@Override
+	public void deleteDealTracker(DealTracker dealTracker) {
+		savedDealTrackersView.deleteDealTracker(dealTracker);
 	}
 
 }
