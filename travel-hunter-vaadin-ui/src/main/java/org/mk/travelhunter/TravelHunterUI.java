@@ -120,7 +120,7 @@ public class TravelHunterUI extends UI implements TravelHunterView{
 	private Component createGuestDealTrackersView() {
 		HorizontalLayout layout = new HorizontalLayout();
 		layout.addComponent(new Label("In order to save deal trackers, please"));
-		layout.addComponent(new Link("Login", new ExternalResource("http://localhost:8080/login")));//TODO
+		layout.addComponent(new Link("Login", new ExternalResource("/login")));//TODO
 		return layout;
 	}
 
