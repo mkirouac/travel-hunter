@@ -1,4 +1,4 @@
-package org.mk.travelhunter.tracker;
+package org.mk.travelhunter.dealtracker;
 
 import java.util.UUID;
 

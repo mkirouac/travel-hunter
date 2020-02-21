@@ -12,7 +12,4 @@ public class TravelDealFilter {
 	private final HotelIdentifier hotel;
 	private final LocalDate startDate;
 	private final LocalDate endDate;
-	
-	
-	
 }

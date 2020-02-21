@@ -4,9 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
-import java.util.Locale;
 
 import org.assertj.core.util.Lists;
 import org.junit.Test;
@@ -120,24 +118,7 @@ public class VoyageRabaisHotelProviderTest {
 		//Third request days 15-20
 		assertRequest(requests.get(2), "2020-01-18", "3", "2");
 	}
-	
-	@Test
-	public void parseDate() {
-		 DateTimeFormatter formatter = new DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("d MMM uuuu").toFormatter().withLocale(Locale.FRENCH);
-		 LocalDate.parse(replaceMonth("10 jan 2020"), formatter);
-		 LocalDate.parse(replaceMonth("1 fév 2020"), formatter);
-	}
-	
-	private String replaceMonth(String dateText) {
-		String[] givenMonths = { "jan", "fév", "mars", "avr.", "mai", "juin", "juil", "août", "sept", "oct", "nov", "déc" };
-        String[] realMonths = { "janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc." };
-        String original = dateText;
-        for (int i = 0; i < givenMonths.length; i++) {
-            original = original.replaceAll(givenMonths[i], realMonths[i]);
-        }
-        return original;
-	}
-	
+
 	private void assertRequest(VoyageRabaisRequest request, LocalDate expectedSearchDate, String flexLow, String flexHigh) {
 		assertThat(date(request.getDate())).isEqualTo(expectedSearchDate);
 		assertThat(request.getFlexLow()).isEqualTo(flexLow);

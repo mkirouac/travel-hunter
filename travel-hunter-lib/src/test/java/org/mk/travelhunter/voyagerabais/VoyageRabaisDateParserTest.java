@@ -13,7 +13,7 @@ public class VoyageRabaisDateParserTest {
 	@Test
 	public void itShouldParseAllMonths() {
 
-		String[] givenMonths = { "jan", "fév", "mar", "avr", "mai", "juin", "juil", "août", "sept", "oct", "nov", "déc" };
+		String[] givenMonths =  { "jan", "fév", "mar", "avr", "mai", "jun", "juil", "aoû", "sep", "oct", "nov", "déc" };
 
 		for(int i = 0; i < givenMonths.length; i++) {
 		
@@ -28,13 +28,6 @@ public class VoyageRabaisDateParserTest {
 			
 		}
 
-	}
-
-	@Test
-	public void itShouldParseFebuary() {
-
-		LocalDate date = dateParser.parseDate("01 fev 2020");
-		assertThat(date).isEqualTo("2020-01-01");
 	}
 
 }

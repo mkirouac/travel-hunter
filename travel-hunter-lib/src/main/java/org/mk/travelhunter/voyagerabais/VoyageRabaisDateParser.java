@@ -10,6 +10,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class VoyageRabaisDateParser {
 
+	private static final String[] REAL_MONTHS = { "janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.",
+			"nov.", "déc." };
+	private static final String[] GIVEN_MONTHS = { "jan", "fév", "mar", "avr", "mai", "jun", "juil", "aoû", "sep", "oct", "nov", "déc" };
+	
 	private final DateTimeFormatter dateTimeFormatter;
 
 	public VoyageRabaisDateParser() {
@@ -25,17 +29,12 @@ public class VoyageRabaisDateParser {
 		return LocalDate.parse(replaceMonth(dateText), dateTimeFormatter);
 	}
 	
-	// TODO Document + externalize + junit (this method is duplicated in
-	// VoyageRabaisHotelProviderTest
+	// TODO Document 
 	private String replaceMonth(String dateText) {
 		// Thanks to StackOverflow for this workaround. Ugly but works.
-		String[] givenMonths = { "jan", "fév", "mar", "avr", "mai", "jun", "juil", "aoû", "sep", "oct", "nov",
-				"déc" };
-		String[] realMonths = { "janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.",
-				"nov.", "déc." };
 		String original = dateText;
-		for (int i = 0; i < givenMonths.length; i++) {
-			original = original.replaceAll(givenMonths[i], realMonths[i]);
+		for (int i = 0; i < GIVEN_MONTHS.length; i++) {
+			original = original.replaceAll(GIVEN_MONTHS[i], REAL_MONTHS[i]);
 		}
 		return original;
 	}

@@ -1,4 +1,4 @@
-package org.mk.travelhunter.tracker;
+package org.mk.travelhunter.dealtracker;
 
 import org.apache.commons.lang3.Validate;
 import org.springframework.stereotype.Service;

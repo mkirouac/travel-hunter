@@ -30,9 +30,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 
 @Component
+@Slf4j
 public class VoyagesRabaisHotelProvider implements HotelProvider {
 
 	private final VoyageRabaisDateParser dateParser;
@@ -50,37 +52,48 @@ public class VoyagesRabaisHotelProvider implements HotelProvider {
 	@Override
 	public Flux<TravelDeal> searchDeals(TravelDealFilter filter) {
 
+		log.debug("Creating web requests");
+		
 		Collection<VoyageRabaisRequest> requests = createRequests(filter);
-
+		
 		WebClient client = WebClient.create(VoyageRabaisRequest.DEFAULT_URL);
-
-		Flux<TravelDeal> travelDealFlux = Flux.empty();
-
-		for (VoyageRabaisRequest request : requests) {
-
-			String requestBody = request.createBody();
-			Flux<TravelDeal> responseBody = client.post()
-					.header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8").bodyValue(requestBody)
-					.retrieve().bodyToMono(String.class).flatMapMany(s -> {
-						return Flux.fromIterable(parseResponse(s));
-					})
-
-			// TODO Look into:
-			// .mergeWith(travelDealFlux) //Would this keep updating the travelDealFlux
-			// initially created?
-			;
-
-			travelDealFlux = Flux.merge(travelDealFlux, responseBody);// TODO What would be the appropriate approach?
-																		// Merging the flux each time doesn't seem
-																		// right.
+		
+		@SuppressWarnings("unchecked")
+		Flux<TravelDeal>[] allSearches = new Flux[requests.size()];
+		
+		int i = 0;
+		for(VoyageRabaisRequest request : requests) {
+			allSearches[i++] = searchDeals(request, client);
 		}
-
-		return travelDealFlux;
+		
+		log.debug("Mergin web requests");
+		
+		return Flux.merge(allSearches);
+		
 
 	}
-
+	
+	private Flux<TravelDeal> searchDeals(VoyageRabaisRequest request, WebClient client) {
+		
+		String requestBody = request.createBody();//Can this be done in the Flux?
+		
+		Flux<TravelDeal> flux = client.post()
+			.header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+			.bodyValue(requestBody)
+			.retrieve()
+			.bodyToMono(String.class)
+			.flatMapMany(s -> {
+				log.debug("Received response from web service");
+				return Flux.fromIterable(parseResponse(s));
+			});
+		
+		return flux;
+	}
+	
 	private List<TravelDeal> parseResponse(String rawResponse) {
 
+	
+		
 		List<TravelDeal> hotels = new ArrayList<>();
 
 		ObjectMapper mapper = new ObjectMapper();
@@ -114,9 +127,11 @@ public class VoyagesRabaisHotelProvider implements HotelProvider {
 					LocalDate hotelDepartureDate = dateParser.parseDate(hotelNode.get("departure_date").asText());
 					
 					String hotelMinPrice = hotelNode.get("minprice").asText();
-					hotels.add(new TravelDeal(hotelName, hotelMinPrice, hotelDepartureDate, hotelCountry, hotelDuration,
-							hotelStars, hotelCity));
-					System.out.println();
+					
+					TravelDeal travelDeal = new TravelDeal(hotelName, hotelMinPrice, hotelDepartureDate, hotelCountry, hotelDuration,
+							hotelStars, hotelCity);
+					
+					hotels.add(travelDeal);
 				}
 
 			}
@@ -126,6 +141,8 @@ public class VoyagesRabaisHotelProvider implements HotelProvider {
 			e.printStackTrace();
 		}
 
+		log.debug("Parsed {} travel deals from raw response", hotels.size());
+		
 		return hotels;
 	}
 	
@@ -134,11 +151,11 @@ public class VoyagesRabaisHotelProvider implements HotelProvider {
 		try {
 			List<HotelIdentifier> hotelIdentifiers = new ArrayList<>();
 
-			Resource resource = new ClassPathResource("PuntaCanaHotels.xml");// TODO
+			Resource resource = new ClassPathResource("PuntaCanaHotels.xml");
 
 			Document document = null;
 			try (InputStream is = resource.getInputStream()) {
-				document = Jsoup.parse(is, "UTF-8", "http://google.com");//// TODO
+				document = Jsoup.parse(is, "UTF-8", "https://mk-travel-hunter.herokuapp.com/");//A URL is needed by JSOUP but not required in this context.
 			}
 			
 			

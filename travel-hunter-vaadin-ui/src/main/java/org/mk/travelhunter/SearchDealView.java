@@ -2,25 +2,20 @@ package org.mk.travelhunter;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.UUID;
 
 import org.mk.travelhunter.controller.TravelHunterController;
 import org.mk.travelhunter.controller.TravelHunterView;
-import org.mk.travelhunter.tracker.DealTracker;
+import org.mk.travelhunter.dealtracker.DealTracker;
 
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.Component;
 import com.vaadin.ui.DateField;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.TextField;
-import com.vaadin.ui.UI;
-import com.vaadin.ui.Window;
-import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.themes.ValoTheme;
 
 import lombok.extern.slf4j.Slf4j;
@@ -34,19 +29,17 @@ public class SearchDealView extends GridLayout {
 	
 	private final TravelHunterController controller;
 	private final TravelHunterView mainView;
-	private final String userId;
 	
 	private DateField startDateField;
 	private DateField endDateField;
 	private ComboBox<HotelIdentifier> hotelsComboBox;
 	private Button searchButton;
-	private Button saveCurrentSearchButton;
+	private ProgressBar progressBar;
 	
-	public SearchDealView(TravelHunterController controller, TravelHunterView mainView, String userId) {
+	public SearchDealView(TravelHunterController controller, TravelHunterView mainView) {
 		super(COLUMNS, ROWS);
 		this.controller = controller;
 		this.mainView = mainView;
-		this.userId = userId;
 	}
 	
 	@Override
@@ -82,23 +75,20 @@ public class SearchDealView extends GridLayout {
 		
 		currentRowIndex++;
 		
-		//Load Search Button
-		//TODO Find a better way to handle this
-		Component loadSavedSearchButton = createLoadSavedSearchButton();
-		addComponent(loadSavedSearchButton, 0, currentRowIndex);
-		setComponentAlignment(loadSavedSearchButton, Alignment.MIDDLE_LEFT);
-		
 		//Search Button
 		searchButton = createSearchButton();
-		saveCurrentSearchButton = new Button("Save Current Search");
-		saveCurrentSearchButton.addClickListener((event) -> {
-			promptSaveDealTrackerInput();
-		});
 		
-		Component searchButtonsLayout = VaadinUtils.wrapInHorizontalLayout(saveCurrentSearchButton, searchButton);
+		progressBar = new ProgressBar();
+		progressBar.setIndeterminate(true);
+		progressBar.setVisible(false);
 		
-		addComponent(searchButtonsLayout, 1, currentRowIndex);
-		setComponentAlignment(searchButtonsLayout, Alignment.MIDDLE_RIGHT);
+		HorizontalLayout searchButtonLayout = VaadinUtils.wrapInHorizontalLayout(progressBar, searchButton);
+		searchButtonLayout.setWidth("100%");
+		searchButtonLayout.setComponentAlignment(searchButton, Alignment.MIDDLE_RIGHT);
+		searchButtonLayout.setComponentAlignment(progressBar, Alignment.MIDDLE_RIGHT);
+		
+		addComponent(searchButtonLayout, 1, currentRowIndex);
+		
 
 		
 		currentRowIndex++;
@@ -106,16 +96,6 @@ public class SearchDealView extends GridLayout {
 	
 	public void setHotels(Collection<HotelIdentifier> hotelIdentifiers) {
 		hotelsComboBox.setItems(hotelIdentifiers);
-	}
-	
-	private Component createLoadSavedSearchButton() {
-		Button button = new Button("load saved search");
-		button.addStyleName(ValoTheme.BUTTON_TINY);
-		
-		button.addClickListener((event) -> {
-			Notification.show("Feature not yet implemented");
-		});
-		return button;
 	}
 	
 	private Button createSearchButton() {
@@ -135,6 +115,17 @@ public class SearchDealView extends GridLayout {
 		searchButton.setEnabled(enabled);
 	}
 	
+	public void searchDeals(DealTracker dealTracker) {
+		
+		HotelIdentifier hotel = dealTracker.getFilter().getHotel();
+		LocalDate startDate = dealTracker.getFilter().getStartDate();
+		LocalDate endDate = dealTracker.getFilter().getEndDate();
+		hotelsComboBox.setValue(hotel);
+		startDateField.setValue(startDate);
+		endDateField.setValue(endDate);
+		searchDeals(hotel, startDate, endDate);
+	}
+	
 	private void searchDeals(ClickEvent event) {
 
 		HotelIdentifier hotel = hotelsComboBox.getValue();
@@ -145,54 +136,31 @@ public class SearchDealView extends GridLayout {
 	}
 	
 	private void searchDeals(HotelIdentifier hotel, LocalDate startDate, LocalDate endDate) {
+		
 		TravelDealFilter filter = TravelDealFilter.builder().hotel(hotel).startDate(startDate).endDate(endDate).build();
 
 		log.debug("Searching with filter: " + filter);
 		
 		controller.beginSearchingForDeals(mainView, filter);
+		progressBar.setVisible(true);
 		
-		
-	}
-
-	private void promptSaveDealTrackerInput() {
-		Window window = new Window("Save Deal Tracker");
-		HorizontalLayout layout = new HorizontalLayout();
-		window.setContent(layout);
-		
-		TextField dealTrackerNameTextField = new TextField("Deal Tracker Name");
-		layout.addComponent(dealTrackerNameTextField);
-		
-		Button confirmButton = new Button("Confirm");
-		confirmButton.addStyleName(ValoTheme.BUTTON_PRIMARY);
-		layout.addComponent(confirmButton);
-		
-		confirmButton.addClickListener((event) -> {
-			saveDealTracker(dealTrackerNameTextField.getValue());
-			window.close();
-		});
-		
-		UI.getCurrent().addWindow(window);
-		
-	}
-
-	private void saveDealTracker(String dealName) {
-		UUID dealTrackerId = UUID.randomUUID();
-		
-		HotelIdentifier hotel = hotelsComboBox.getValue();
-		LocalDate startDate = startDateField.getValue();
-		LocalDate endDate = endDateField.getValue();
-
-		TravelDealFilter filter = new TravelDealFilter(hotel, startDate, endDate);
-		
-		//Controller
-		DealTracker dealTracker = new DealTracker(dealTrackerId, dealName, userId, filter);
-		controller.beginSavingDealTracker(mainView, dealTracker);
 	}
 	
-	public void loadDealTracker(DealTracker dealTracker) {
-		hotelsComboBox.setValue(dealTracker.getFilter().getHotel());
-		startDateField.setValue(dealTracker.getFilter().getStartDate());
-		endDateField.setValue(dealTracker.getFilter().getEndDate());
+	
+	public void searchCompleted() {
+		progressBar.setVisible(false);
+	}
+	
+	public HotelIdentifier getHotelIdentifier() {
+		return hotelsComboBox.getValue();
+	}
+	
+	public LocalDate getStartDate() {
+		return startDateField.getValue();
+	}
+	
+	public LocalDate getEndDate() {
+		return endDateField.getValue();
 	}
 
 

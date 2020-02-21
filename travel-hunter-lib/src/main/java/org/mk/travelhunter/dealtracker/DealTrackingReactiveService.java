@@ -1,4 +1,4 @@
-package org.mk.travelhunter.tracker;
+package org.mk.travelhunter.dealtracker;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

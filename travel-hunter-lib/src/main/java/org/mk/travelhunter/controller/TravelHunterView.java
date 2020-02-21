@@ -1,10 +1,11 @@
 package org.mk.travelhunter.controller;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.mk.travelhunter.HotelIdentifier;
 import org.mk.travelhunter.TravelDeal;
-import org.mk.travelhunter.tracker.DealTracker;
+import org.mk.travelhunter.dealtracker.DealTracker;
 
 public interface TravelHunterView {
 	//TODO Review all wordings AND consider splitting this in multiple views
@@ -14,6 +15,8 @@ public interface TravelHunterView {
 	void displaySearchCompletedNotification();
 	void displaySearchError(Throwable ex);
 	void addSearchResult(TravelDeal deal);
+	void addSearchResults(List<TravelDeal> deals);
 	void deleteDealTracker(DealTracker dealTracker);
+	
 	
 }

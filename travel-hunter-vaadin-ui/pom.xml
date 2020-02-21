@@ -21,6 +21,7 @@
 			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin-push</artifactId>
 		</dependency>
+		
 	</dependencies>
 
 	<build>

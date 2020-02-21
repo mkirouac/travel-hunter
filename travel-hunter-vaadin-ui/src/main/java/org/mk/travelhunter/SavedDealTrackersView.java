@@ -6,11 +6,16 @@ import java.util.List;
 import org.apache.commons.lang3.event.EventListenerSupport;
 import org.mk.travelhunter.controller.TravelHunterController;
 import org.mk.travelhunter.controller.TravelHunterView;
-import org.mk.travelhunter.tracker.DealTracker;
+import org.mk.travelhunter.dealtracker.DealTracker;
 
+import com.vaadin.icons.VaadinIcons;
+import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
-import com.vaadin.ui.renderers.ButtonRenderer;
-import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.renderers.ComponentRenderer;
+import com.vaadin.ui.themes.ValoTheme;
 
 public class SavedDealTrackersView extends Grid<DealTracker> {
 
@@ -27,24 +32,43 @@ public class SavedDealTrackersView extends Grid<DealTracker> {
 		
 		setItems(dealTrackers);
 		
+		
 		removeAllColumns();
-		addColumn("name");
-		addColumn(n -> "Load", new ButtonRenderer<>(event ->   onLoadDealTrackerClicked(event)));
-		addColumn(n -> "Delete", new ButtonRenderer<>(event -> onDeleteDealTrackerClicked(event)));
+		
+		
+		Column<DealTracker, ?> actionsColumn = addColumn(dealTracker -> createActionComponents(dealTracker), new ComponentRenderer()).setWidth(130);
+		Column<DealTracker, ?> nameColumn = addColumn("name").setExpandRatio(1);
+		
+		getHeader().getDefaultRow().join(actionsColumn, nameColumn).setText("Saved Deal Trackers");;
+
 		setHeightByRows(5);
+		
+		setSelectionMode(SelectionMode.NONE);
 		
 	}
 
-	private void onDeleteDealTrackerClicked(RendererClickEvent<DealTracker> event) {
-		controller.beginDeleteDealTracker(mainView, event.getItem());
-	}
-
-	public void addDealTrackerSelectedListener(DealTrackerSelectedListener listener) {
-		this.dealTrackerSelectedListeners.addListener(listener);
+	private Component createActionComponents(DealTracker dealTracker) {
+		Button deleteButton = new Button(VaadinIcons.TRASH.getHtml());
+		deleteButton.setCaptionAsHtml(true);
+		deleteButton.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		deleteButton.addClickListener(event -> controller.beginDeleteDealTracker(mainView, dealTracker));
+		
+		Button loadButton = new Button(VaadinIcons.SEARCH.getHtml());
+		loadButton.setCaptionAsHtml(true);
+		loadButton.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		loadButton.addClickListener(event -> dealTrackerSelectedListeners.fire().dealSelected(dealTracker));
+		
+		
+		HorizontalLayout layout = VaadinUtils.wrapInHorizontalLayout(loadButton, deleteButton);
+		layout.setSpacing(false);
+		layout.setMargin(false);
+		layout.setComponentAlignment(deleteButton, Alignment.MIDDLE_LEFT);
+		layout.setComponentAlignment(loadButton, Alignment.MIDDLE_LEFT);
+		return layout;
 	}
 	
-	private void onLoadDealTrackerClicked(RendererClickEvent<DealTracker> event) {
-		dealTrackerSelectedListeners.fire().dealSelected(event.getItem());
+	public void addDealTrackerSelectedListener(DealTrackerSelectedListener listener) {
+		this.dealTrackerSelectedListeners.addListener(listener);
 	}
 	
 	public void displayDealTracker(DealTracker dealTracker) {

@@ -1,14 +1,23 @@
 package org.mk.travelhunter.controller;
 
 import java.time.Duration;
+import java.util.logging.Level;
 
 import org.mk.travelhunter.HotelProvider;
+import org.mk.travelhunter.TravelDeal;
 import org.mk.travelhunter.TravelDealFilter;
-import org.mk.travelhunter.tracker.DealTracker;
-import org.mk.travelhunter.tracker.DealTrackingReactiveService;
+import org.mk.travelhunter.dealtracker.DealTracker;
+import org.mk.travelhunter.dealtracker.DealTrackingReactiveService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
+
+@Slf4j
 @Component
 public class TravelHunterReactiveController implements TravelHunterController {
 
@@ -55,19 +64,35 @@ public class TravelHunterReactiveController implements TravelHunterController {
 	public void beginSearchingForDeals(TravelHunterView source, TravelDealFilter filter) {
 		
 		//TODO Maybe we need a single flux and cancel all items should a new request arrive?
-		hotels.searchDeals(filter)
+		Flux<TravelDeal> search = hotels.searchDeals(filter);
+		
+		search
 			.doFirst(() -> {
+				log.debug("Clearing all search results");
 				source.clearAllSearchResults();
 			})
+
+			//Schedulers.enableMetris() -> uses Micrometer. Worth having a look.
+			
+			.subscribeOn(Schedulers.parallel())
+			
+			.buffer(20)
+			
 			.doOnComplete(() -> {
+				log.debug("Search completed");
 				source.displaySearchCompletedNotification();
 			})
 			.doOnError((ex) -> {
 				source.displaySearchError(ex);
 			})
-			.subscribe(deal -> {
-				source.addSearchResult(deal);
-			});
+			
+			.log("controller", Level.FINEST)
+			.subscribe(deals -> {
+				log.debug("Received {} deals from subscription", deals.size());
+				//source.addSearchResult(deal);
+				source.addSearchResults(deals);
+			})
+			;
 	}
 
 
@@ -83,12 +108,11 @@ public class TravelHunterReactiveController implements TravelHunterController {
 			})
 
 			.subscribe(v -> {
-				source.deleteDealTracker(dealTracker);
+				//source.deleteDealTracker(dealTracker);
 			})
 
 		;
 		
 	}
-	
 	
 }

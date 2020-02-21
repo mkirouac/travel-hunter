@@ -1,7 +1,7 @@
 package org.mk.travelhunter.controller;
 
 import org.mk.travelhunter.TravelDealFilter;
-import org.mk.travelhunter.tracker.DealTracker;
+import org.mk.travelhunter.dealtracker.DealTracker;
 
 //TODO Don't belong here
 public interface TravelHunterController {
