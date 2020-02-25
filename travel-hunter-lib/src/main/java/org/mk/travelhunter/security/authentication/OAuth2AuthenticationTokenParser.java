@@ -16,9 +16,17 @@ public class OAuth2AuthenticationTokenParser implements AuthenticationParser<OAu
 	@Override
 	public String getUserName(Authentication authentication) {
 		
+		//This doesn't seem to be reliable... Probably better with a meaningless userid.
+		
 		OAuth2AuthenticationToken token = cast(authentication);
 		OAuth2User user = token.getPrincipal();
-		return user.getAttribute("login");
+		
+		//FIXME
+		String userName = user.getAttribute("login");//github
+		if(userName == null) {
+			userName = user.getAttribute("email");//google
+		}
+		return userName;//email
 	}
 
 	@Override
