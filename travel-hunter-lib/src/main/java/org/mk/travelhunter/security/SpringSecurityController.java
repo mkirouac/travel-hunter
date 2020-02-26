@@ -8,15 +8,17 @@ import org.mk.travelhunter.security.authentication.AuthenticationParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Component
+@Slf4j
 public class SpringSecurityController implements SecurityController {
 
-	private static final String GUEST = "Guest";
+	static final String GUEST = "Guest";
 	private final Map<Class<? extends Authentication>, AuthenticationParser<?>> typeToAuthenticationParserMap;
 	
 	@Autowired
@@ -50,32 +52,22 @@ public class SpringSecurityController implements SecurityController {
 	 * @return the {@link AuthenticationParser} or null if a parser doesn't exists for the specified type.
 	 */
 	private AuthenticationParser<?> getAuthenticationParser() {
-		 AuthenticationParser<?> parser = typeToAuthenticationParserMap.get(getAuthentication().getClass());
+		AuthenticationParser<?> parser = null;
+		Authentication authentication = getAuthentication();
+		if(authentication != null) {
+			parser = typeToAuthenticationParserMap.get(getAuthentication().getClass());
+		} else {
+			log.warn("No Authentication was found. This probably indicates that the SecurityContextHolder was not populated with the SecurityContext");
+		}
 		 if(parser == null) {
-			 //TODO Externalize
-			 parser = new AuthenticationParser<Authentication>() {
-
-				@Override
-				public Class<Authentication> getSupportedAuthenticationType() {
-					return null;
-				}
-
-				@Override
-				public String getUserName(Authentication authentication) {
-					return GUEST;
-				}
-
-				@Override
-				public String getAuthenticationProvider(Authentication authentication) {
-					return null;
-				}
-			};
+			 parser = new NullAuthenticationParser();
 		 }
 		 return parser;
 	}
 
 	private Authentication getAuthentication() {
-		return SecurityContextHolder.getContext().getAuthentication();
+		SecurityContext context = SecurityContextHolder.getContext();
+		return context == null ? null : context.getAuthentication();
 	}
 	
 	private Map<Class<? extends Authentication>, AuthenticationParser<?>> buildTypeToAuthenticationParserMap(List<AuthenticationParser<?>> authenticationParsers) {

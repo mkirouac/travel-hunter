@@ -7,7 +7,7 @@ public interface DealTrackingReactiveService {
 
 	Mono<DealTracker> saveDealTracker(DealTracker dealTracker);
 	
-	Flux<DealTracker> getDealTrackers(String userId);
+	Flux<DealTracker> getDealTrackers(String userId, String userRealm);
 
 	Mono<Void> deleteDealTracker(DealTracker dealTracker);
 	

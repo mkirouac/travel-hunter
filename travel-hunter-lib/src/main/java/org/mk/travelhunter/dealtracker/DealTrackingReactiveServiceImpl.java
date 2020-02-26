@@ -24,11 +24,11 @@ public class DealTrackingReactiveServiceImpl implements DealTrackingReactiveServ
 	}
 
 	@Override
-	public Flux<DealTracker> getDealTrackers(String userId) {
+	public Flux<DealTracker> getDealTrackers(String userId, String userRealm) {
 		
 		Validate.notNull(userId, "getDealTracker(userId) is expecting a non-null userId");
 		
-		Flux<DealTracker> trackers = dealTrackerRepository.findAllByUserId(userId);
+		Flux<DealTracker> trackers = dealTrackerRepository.findAllByUserIdAndUserRealm(userId, userRealm);
 		
 		return trackers;
 				

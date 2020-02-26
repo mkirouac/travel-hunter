@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -18,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.vaadin.annotations.Push;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.VaadinRequest;
+import com.vaadin.shared.ui.ui.Transport;
 import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -36,12 +36,9 @@ import com.vaadin.ui.themes.ValoTheme;
 import lombok.extern.slf4j.Slf4j;
 
 @SpringUI
-@Push
+@Push(transport = Transport.WEBSOCKET_XHR)//XHR is required for the SecurityContext to be populated in AJAX requests
 @Slf4j
 public class TravelHunterUI extends UI implements TravelHunterView{
-
-	//Test code..
-	private static final String TEST_USER_ID = "TEST-VAADIN-USER";
 	
 	private final TravelHunterController controller;
 	private final SecurityController securityController;
@@ -78,7 +75,7 @@ public class TravelHunterUI extends UI implements TravelHunterView{
 		savedDealTrackersView.setWidth("100%");
 		savedDealTrackersView.addDealTrackerSelectedListener(dealTracker -> searchDeals(dealTracker));
 
-		Component guestDealTrackersView = createGuestDealTrackersView();
+		guestDealTrackersView = createGuestDealTrackersView();
 		
 		HorizontalLayout searchLayout = null;
 		
@@ -109,7 +106,10 @@ public class TravelHunterUI extends UI implements TravelHunterView{
 
 		setContent(layout);
 		
-		controller.requestDealTrackers(this, TEST_USER_ID);
+		
+		if(securityController.isUserAuthenticated()) {
+			controller.requestDealTrackers(this);
+		}
 		controller.requestHotelIdentifiers(this);
 	
 		Notification.show("Welcome " + getUserName() + "!");
@@ -172,7 +172,6 @@ public class TravelHunterUI extends UI implements TravelHunterView{
 	}
 
 	private void saveDealTracker(String dealName) {
-		UUID dealTrackerId = UUID.randomUUID();
 		
 		HotelIdentifier hotel = searchDealView.getHotelIdentifier();
 		LocalDate startDate = searchDealView.getStartDate();
@@ -181,7 +180,7 @@ public class TravelHunterUI extends UI implements TravelHunterView{
 		TravelDealFilter filter = new TravelDealFilter(hotel, startDate, endDate);
 		
 		//Controller
-		DealTracker dealTracker = new DealTracker(dealTrackerId, dealName, TEST_USER_ID, filter);
+		DealTracker dealTracker = new DealTracker(dealName, filter);
 		controller.beginSavingDealTracker(this, dealTracker);
 	}
 	

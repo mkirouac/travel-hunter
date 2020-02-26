@@ -49,7 +49,7 @@ public class DealTrackingServiceTest {
 		dealTrackingService.saveDealTracker(tracker).block();
 			
 		//execute
-		List<DealTracker> trackers = dealTrackingService.getDealTrackers("test-user-id").collectList().block();
+		List<DealTracker> trackers = dealTrackingService.getDealTrackers("test-user-id", "test-user-realm").collectList().block();
 		
 		//assert
 		assertThat(trackers).isNotNull();
@@ -68,7 +68,7 @@ public class DealTrackingServiceTest {
 		dealTrackingService.saveDealTracker(tracker2).block();
 			
 		//execute
-		List<DealTracker> trackers = dealTrackingService.getDealTrackers("test-user-id").collectList().block();
+		List<DealTracker> trackers = dealTrackingService.getDealTrackers("test-user-id", "test-user-realm").collectList().block();
 		
 		//assert
 		assertThat(trackers).isNotNull();
@@ -88,8 +88,8 @@ public class DealTrackingServiceTest {
 		dealTrackingService.saveDealTracker(tracker3).block();
 			
 		//execute
-		List<DealTracker> trackersForUser1 = dealTrackingService.getDealTrackers("test-user-id-1").collectList().block();
-		List<DealTracker> trackersForUser2 = dealTrackingService.getDealTrackers("test-user-id-2").collectList().block();
+		List<DealTracker> trackersForUser1 = dealTrackingService.getDealTrackers("test-user-id-1", "test-user-realm").collectList().block();
+		List<DealTracker> trackersForUser2 = dealTrackingService.getDealTrackers("test-user-id-2", "test-user-realm").collectList().block();
 		
 		//assert user 1
 		assertThat(trackersForUser1).isNotNull();
@@ -106,7 +106,7 @@ public class DealTrackingServiceTest {
 	public void noTrackersShouldReturnEmptyList() {
 		
 		//execute
-		List<DealTracker> trackers = dealTrackingService.getDealTrackers("test-user-id-1").collectList().block();
+		List<DealTracker> trackers = dealTrackingService.getDealTrackers("test-user-id-1", "test-user-realm").collectList().block();
 		
 		//assert
 		assertThat(trackers).isNotNull();
@@ -123,7 +123,7 @@ public class DealTrackingServiceTest {
 	@Test(expected = NullPointerException.class)
 	public void gettingDealTrackersWithNullUserIdShouldThrowNullPointerException() {
 		
-		dealTrackingService.getDealTrackers(null);
+		dealTrackingService.getDealTrackers(null, null);
 		
 	}
 	
@@ -135,7 +135,7 @@ public class DealTrackingServiceTest {
 				.hotel(new HotelIdentifier("tt", "test-hotel"))
 				.build();
 		
-		DealTracker tracker = new DealTracker(UUID.randomUUID(), trackerName, userId, filter);
+		DealTracker tracker = new DealTracker(trackerName, filter);
 		return tracker;
 	}
 }

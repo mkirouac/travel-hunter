@@ -8,6 +8,7 @@ import org.mk.travelhunter.TravelDeal;
 import org.mk.travelhunter.TravelDealFilter;
 import org.mk.travelhunter.dealtracker.DealTracker;
 import org.mk.travelhunter.dealtracker.DealTrackingReactiveService;
+import org.mk.travelhunter.security.SecurityController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,12 +25,16 @@ public class TravelHunterReactiveController implements TravelHunterController {
 	
 	private final HotelProvider hotels;
 	private final DealTrackingReactiveService dealTrackingService;
-	
+	private final SecurityController securityController;
 	
 	@Autowired
-	public TravelHunterReactiveController(HotelProvider hotels, DealTrackingReactiveService dealTrackingService) {
+	public TravelHunterReactiveController(
+			HotelProvider hotels, 
+			DealTrackingReactiveService dealTrackingService, 
+			SecurityController securityController) {
 		this.hotels = hotels;
 		this.dealTrackingService = dealTrackingService;
+		this.securityController = securityController;
 	}
 
 
@@ -41,9 +46,16 @@ public class TravelHunterReactiveController implements TravelHunterController {
 
 
 	@Override
-	public void requestDealTrackers(TravelHunterView source, String userId) {
+	public void requestDealTrackers(TravelHunterView source) {
 		
-		dealTrackingService.getDealTrackers(userId)
+		if(!securityController.isUserAuthenticated()) {
+			throw new SecurityException("This operation (requestDealTrackers) is restricted to authenticated users");
+		}
+		
+		String userId = securityController.getUserName();
+		String userRealm = securityController.getAuthenticationProvider();
+		
+		dealTrackingService.getDealTrackers(userId, userRealm)
 			.delayElements(Duration.ofMillis(200))//Just to show this in action
 			.subscribe(dealTracker -> {
 				source.displayDealTracker(dealTracker);
@@ -53,6 +65,14 @@ public class TravelHunterReactiveController implements TravelHunterController {
 
 	@Override
 	public void beginSavingDealTracker(TravelHunterView source, DealTracker dealTracker) {
+		
+		if(!securityController.isUserAuthenticated()) {
+			throw new SecurityException("This operation (beginSavingDealTracker) is restricted to authenticated users");
+		}
+		
+		dealTracker.setUserId(securityController.getUserName());
+		dealTracker.setUserRealm(securityController.getAuthenticationProvider());
+		
 		dealTrackingService.saveDealTracker(dealTracker)
 			.subscribe(savedDealTracker -> {
 				source.displayDealTracker(dealTracker);
